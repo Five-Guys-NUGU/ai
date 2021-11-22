@@ -1,42 +1,67 @@
 # Normalization - 정규화
-# 변수: uid, sex, name, age, gpa, interests, avg_study_time
+# 변수: uid, sex, name, age, gpa, interests, avg_study_time, avg_rest_count
 # Dataset: 스스로 제작한 csv_data_example.csv
 
-
+from sklearn.datasets import make_blobs
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+
+# Kmean Clustering을 위한 최적의 K 찾는 함수 - Silhouette Score 이용
+def findBestK(df):
+    sil = []
+    kmax = 4
+
+    # k값을 2 ~ kmax 값까지 테스트 해보기
+    for k in range(2, kmax + 1):
+        kmeans = KMeans(n_clusters = k).fit(df[['avg_study_time', 'avg_rest_count']])
+        labels = kmeans.labels_
+        sil.append(silhouette_score(df[['avg_study_time', 'avg_rest_count']], labels, metric = 'euclidean'))
+
+    print(sil)
+    return (2 + sil.index(max(sil)))
+
+# 입력받은 k를 이용하여 kmean clustering 수행
+def kmean(df, k):
+    kmeans = KMeans(n_clusters = k).fit(df[['avg_study_time', 'avg_rest_count']])
+    labels = kmeans.labels_
+
+
+    plt.figure(figsize = (10, 6))
+    plt.scatter(df['avg_study_time'], df['avg_rest_count'], c=labels.astype(float))
+    plt.xlabel('avg_study_time')
+    plt.ylabel('avg_rest_count')
+    plt.show()
+
+    print(labels)
+
+    return labels
+
+# 점 데이터 분류 - n개의 점 각각에 대한 데이터에서 k개의 데이터로 변환
+def distinguish(k, labels):
+    lists = []
+
+    for i in range(k):
+        lists.append([index for index, value in enumerate(labels) if value == i])
+
+    print(lists)
+    return lists
+    
 
 
 # Read Data from the csv File
 df = pd.read_csv('./data/csv_data_example.csv', encoding='euc-kr')
 print(df)
 
-# data = df.loc[:, ['age', 'gpa', 'avg_study_time']]
-
-# Normalization
-stdscaler = MinMaxScaler()
-df[['avg_study_time', 'avg_rest_count']] = stdscaler.fit_transform(df[['avg_study_time', 'avg_rest_count']])
-
+# Normalization - 정규화
+mmscaler = MinMaxScaler()
+df[['avg_study_time', 'avg_rest_count']] = mmscaler.fit_transform(df[['avg_study_time', 'avg_rest_count']])
 print(df)
 
-# 화면(figure) 생성
-plt.figure(figsize = (10, 6))
-
-# K 값을 늘려가며 반복 테스트
-for i in range(1, 7):
-    # 클러스터 생성
-    estimator = KMeans(n_clusters = i)
-    ids = estimator.fit_predict(df[['avg_study_time', 'avg_rest_count']])
-    # 2행 3열을 가진 서브플롯 추가 (인덱스 = i)
-    plt.subplot(3, 2, i)
-    plt.tight_layout()
-    # 서브플롯의 라벨링
-    plt.title("K value = {}".format(i))
-    plt.xlabel('avg_study_time')
-    plt.ylabel('avg_rest_count')
-    # 클러스터링 그리기
-    plt.scatter(df['avg_study_time'], df['avg_rest_count'], c=ids)  
-plt.show()
+k = findBestK(df)
+labels = kmean(df, k)
+lists = distinguish(k, labels)
