@@ -10,6 +10,7 @@ from sklearn.metrics import silhouette_score
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 
 # Kmean Clustering을 위한 최적의 K 찾는 함수 - Silhouette Score 이용
 def findBestK(df):
@@ -38,7 +39,6 @@ def kmean(df, k):
     plt.show()
 
     print(labels)
-
     return labels
 
 # 점 데이터 분류 - n개의 점 각각에 대한 데이터에서 k개의 데이터로 변환
@@ -51,6 +51,17 @@ def distinguish(k, labels):
     print(lists)
     return lists
     
+# lists에서 매칭하는 함수
+# 짝수 개 일때만 고려해서 오류 생길 수 있음 현재
+def match(lists):
+    couples = []
+    rest = []
+
+    for list in lists:
+        random.shuffle(list)
+        for i in range(0, len(list), 2):
+            couples.append(list[i:i+2])
+    return couples
 
 
 # Read Data from the csv File
@@ -65,3 +76,4 @@ print(df)
 k = findBestK(df)
 labels = kmean(df, k)
 lists = distinguish(k, labels)
+print(match(lists))
