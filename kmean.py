@@ -10,12 +10,12 @@ from sklearn.metrics import silhouette_score
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import random
+import random, math, json
 
 # Kmean Clustering을 위한 최적의 K 찾는 함수 - Silhouette Score 이용
 def findBestK(df):
     sil = []
-    kmax = 4
+    kmax = round(math.sqrt(30))
 
     # k값을 2 ~ kmax 값까지 테스트 해보기
     for k in range(2, kmax + 1):
@@ -48,6 +48,7 @@ def distinguish(k, labels):
     for i in range(k):
         lists.append([index for index, value in enumerate(labels) if value == i])
 
+    print(len(lists))
     print(lists)
     return lists
     
@@ -58,15 +59,25 @@ def match(lists):
     rest = []
 
     for list in lists:
+        if len(list) % 2:
+            list.pop()
         random.shuffle(list)
         for i in range(0, len(list), 2):
-            couples.append(list[i:i+2])
+            temp_arr = []
+            temp_arr.append(df_uid[list[i]])
+            temp_arr.append(df_uid[list[i+1]])
+            couples.append(temp_arr)
+
     return couples
 
 
 # Read Data from the csv File
 df = pd.read_csv('./data/csv_data_example.csv', encoding='euc-kr')
 print(df)
+
+df_uid = df['uid'].tolist()
+
+print(df['uid'][0:2])
 
 # Normalization - 정규화
 mmscaler = MinMaxScaler()
